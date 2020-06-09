@@ -51,13 +51,17 @@ class BasicDataset(Dataset):
         assert len(img_file) == 1, \
             f'Either no image or multiple images found for the ID {idx}: {img_file}'
         mask = Image.open(mask_file[0])
+        mask = mask.resize((256, 256))
+        mask = mask.convert("L")
         img = Image.open(img_file[0])
-
+        img = img.resize((256, 256))
         assert img.size == mask.size, \
             f'Image and mask {idx} should be the same size, but are {img.size} and {mask.size}'
 
         img = self.preprocess(img, self.scale)
+
         mask = self.preprocess(mask, self.scale)
+
 
         return {
             'image': torch.from_numpy(img).type(torch.FloatTensor),
