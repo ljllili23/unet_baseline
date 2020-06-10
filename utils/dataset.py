@@ -6,7 +6,10 @@ import torch
 from torch.utils.data import Dataset
 import logging
 from PIL import Image
-
+import torchvision.transforms as transforms
+import torchvision.transforms.functional as TF
+import random
+seed = 23
 
 class BasicDataset(Dataset):
     def __init__(self, imgs_dir, masks_dir, scale=1):
@@ -41,6 +44,30 @@ class BasicDataset(Dataset):
 
         return img_trans
 
+    def transform(self, image, mask):
+        # ToPILImage = transforms.ToPILImage()
+        # image = ToPILImage(image_np)
+        # mask = ToPILImage(mask_np)
+        image = TF.pad(image, padding=20, padding_mode='reflect')
+        mask = TF.pad(mask, padding=20, padding_mode='reflect')
+
+        angle = random.uniform(-180, 180)
+        width, height = image.size
+        max_dx = 0.1 * width
+        max_dy = 0.1 * height
+        translations = (np.round(random.uniform(-max_dx, max_dx)), np.round(random.uniform(-max_dy, max_dy)))
+        scale = random.uniform(0.8, 1.2)
+        shear = random.uniform(-0.5, 0.5)
+        image = TF.affine(image, angle=angle, translate=translations, scale=scale, shear=shear)
+        mask = TF.affine(mask, angle=angle, translate=translations, scale=scale, shear=shear)
+
+        image = TF.center_crop(image, (256, 256))
+        mask = TF.center_crop(mask, (256, 256))
+
+        # image = TF.to_tensor(image)
+        # mask = TF.to_tensor(mask)
+        return image, mask
+
     def __getitem__(self, i):
         idx = self.ids[i]
         mask_file = glob(self.masks_dir + idx + '.*')
@@ -51,16 +78,16 @@ class BasicDataset(Dataset):
         assert len(img_file) == 1, \
             f'Either no image or multiple images found for the ID {idx}: {img_file}'
         mask = Image.open(mask_file[0])
-        mask = mask.resize((256, 256))
+        mask = mask.resize((512, 512))
         mask = mask.convert("L")
         img = Image.open(img_file[0])
-        img = img.resize((256, 256))
+        img = img.resize((512, 512))
         assert img.size == mask.size, \
             f'Image and mask {idx} should be the same size, but are {img.size} and {mask.size}'
-
+        # img, mask = self.transform(img, mask)
         img = self.preprocess(img, self.scale)
-
         mask = self.preprocess(mask, self.scale)
+
 
 
         return {
