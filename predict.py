@@ -18,6 +18,7 @@ def predict_img(net,
                 device,
                 scale_factor=1,
                 out_threshold=0.5):
+    torch.cuda.empty_cache()
     net.eval()
 
     img = torch.from_numpy(BasicDataset.preprocess(full_img, scale_factor))
@@ -55,8 +56,8 @@ def get_args():
     parser.add_argument('--model', '-m', default='MODEL.pth',
                         metavar='FILE',
                         help="Specify the file in which the model is stored")
-    parser.add_argument('--input', '-i', metavar='INPUT', nargs='+',
-                        help='filenames of input images', required=True)
+    parser.add_argument('--input', '-i', default='../data/images/',  metavar='INPUT', nargs='+',
+                        help='filenames of input images')
 
     parser.add_argument('--output', '-o', metavar='INPUT', nargs='+',
                         help='Filenames of ouput images')
@@ -79,22 +80,20 @@ def get_args():
 def get_output_filenames(args):
     in_files = args.input
     out_files = []
+    output_dir = '../outputs'
+    if args.output:
+        output_dir = args.output
 
-    if not args.output:
-        for f in in_files:
-            pathsplit = os.path.splitext(f)
-            out_files.append("{}_OUT{}".format(pathsplit[0], pathsplit[1]))
-    elif len(in_files) != len(args.output):
-        logging.error("Input files and output files are not of the same length")
-        raise SystemExit()
-    else:
-        out_files = args.output
+    for f in os.listdir(in_files):
+        pathsplit = os.path.splitext(f)
+        out_files.append(os.path.join(output_dir, "{}_OUT{}".format(pathsplit[0], pathsplit[1])))
 
     return out_files
 
 
 def mask_to_image(mask):
     return Image.fromarray((mask * 255).astype(np.uint8))
+
 
 
 if __name__ == "__main__":
@@ -105,7 +104,7 @@ if __name__ == "__main__":
     net = UNet(n_channels=3, n_classes=1)
 
     logging.info("Loading model {}".format(args.model))
-
+    print("Loading model {}".format(args.model))
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
     net.to(device=device)
@@ -113,10 +112,10 @@ if __name__ == "__main__":
 
     logging.info("Model loaded !")
 
-    for i, fn in enumerate(in_files):
+    for i, fn in enumerate(os.listdir(in_files)):
         logging.info("\nPredicting image {} ...".format(fn))
-
-        img = Image.open(fn)
+        print("\npredicting image {}".format(fn))
+        img = Image.open(os.path.join(args.input, fn))
 
         mask = predict_img(net=net,
                            full_img=img,
