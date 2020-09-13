@@ -1,4 +1,4 @@
-# UNet: semantic segmentation with PyTorch
+# U-Net, U-Net++, R2U-Net, attention U-Net, attention R2U-Net implementation with pytorch
 
 <!--- ![input and output for a random image in the test dataset](https://framapic.org/OcE8HlU6me61/KNTt8GFQzxDR.png) -->
 
