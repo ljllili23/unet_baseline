@@ -1,6 +1,9 @@
 # UNet: semantic segmentation with PyTorch
 
+<<<<<<< HEAD
 <!--- ![input and output for a random image in the test dataset](https://framapic.org/OcE8HlU6me61/KNTt8GFQzxDR.png) -->
+=======
+>>>>>>> 5f290d1f2bdc286e341b610c35e54df4fa7ea4c3
 
 <!---
 Customized implementation of the [U-Net](https://arxiv.org/abs/1505.04597) in PyTorch for Kaggle's [Carvana Image Masking Challenge](https://www.kaggle.com/c/carvana-image-masking-challenge) from high definition images.
