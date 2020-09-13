@@ -80,7 +80,9 @@ def get_args():
 def get_output_filenames(args):
     in_files = args.input
     out_files = []
-    output_dir = '../outputs'
+    output_dir = '../kernal_outputs'
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
     if args.output:
         output_dir = args.output
 

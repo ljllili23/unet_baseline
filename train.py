@@ -8,23 +8,39 @@ import torch
 import torch.nn as nn
 from torch import optim
 from tqdm import tqdm
-
+import random
+import os
 from eval import eval_net
 from unet import UNet
-
+from torchsummary import summary
 from torch.utils.tensorboard import SummaryWriter
 from utils.dataset import BasicDataset
 from torch.utils.data import DataLoader, random_split
+from unet import R2AttU_Net, AttU_Net, R2U_Net
+from unet import NestedUNet
+
+def seed_torch(seed=1029):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed) # if you are using multi-GPU.
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.enabled = False
+seed_torch(23)
 
 dir_img = '../data/train/aug_image/'
+# dir_mask = '../data/train/aug_kernal_mask/'
 dir_mask = '../data/train/aug_mask/'
 # dir_img = '../data/validation/aug_image/'
 # dir_mask = '../data/validation/aug_image/'
 
 # dir_img = '../data/validation/aug_image/'
 # dir_mask = '../data/validation/aug_image/'
-dir_checkpoint = 'checkpoints/'
-
+dir_checkpoint = 'kernal_checkpoints/'
+# if not os.path.exists(dir_checkpoint):
 
 def train_net(net,
               device,
@@ -57,6 +73,7 @@ def train_net(net,
     ''')
 
     optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
+    # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if net.n_classes > 1 else 'max', patience=2)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if net.n_classes > 1 else 'max', patience=2)
     if net.n_classes > 1:
         criterion = nn.CrossEntropyLoss()
@@ -65,7 +82,7 @@ def train_net(net,
 
     for epoch in range(epochs):
         net.train()
-
+        # summary(net, input_size=(3, 512, 512))
         epoch_loss = 0
         with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{epochs}', unit='img') as pbar:
             for batch in train_loader:
@@ -160,11 +177,16 @@ if __name__ == '__main__':
     #   - For 1 class and background, use n_classes=1
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
-    net = UNet(n_channels=3, n_classes=1, bilinear=True)
-    logging.info(f'Network:\n'
-                 f'\t{net.n_channels} input channels\n'
-                 f'\t{net.n_classes} output channels (classes)\n'
-                 f'\t{"Bilinear" if net.bilinear else "Transposed conv"} upscaling')
+    # net = UNet(n_channels=3, n_classes=1, bilinear=True)
+    # net = AttU_Net()
+    # net = R2U_Net()
+    # net = R2AttU_Net()
+    net = NestedUNet()
+    # logging.info(f'Network:\n'
+    #              f'\t{net.n_channels} input channels\n'
+    #              f'\t{net.n_classes} output channels (classes)\n'
+    #              f'\t{"Bilinear" if net.bilinear else "Transposed conv"} upscaling')
+
 
     if args.load:
         net.load_state_dict(
