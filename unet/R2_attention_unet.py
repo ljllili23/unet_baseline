@@ -190,6 +190,7 @@ class U_Net(nn.Module):
         d5 = self.Up_conv5(d5)
 
         d4 = self.Up4(d5)
+        # d4 = self.Up4(x4)
         d4 = torch.cat((x3, d4), dim=1)
         d4 = self.Up_conv4(d4)
 

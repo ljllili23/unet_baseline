@@ -17,7 +17,7 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.dataset import BasicDataset
 from torch.utils.data import DataLoader, random_split
 from unet import R2AttU_Net, AttU_Net, R2U_Net
-from unet import NestedUNet
+from unet import NestedUNet, U_Net
 
 def seed_torch(seed=1029):
     random.seed(seed)
@@ -71,7 +71,7 @@ def train_net(net,
         Device:          {device.type}
         Images scaling:  {img_scale}
     ''')
-
+    summary(net, input_size=(3, 512, 512))
     optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if net.n_classes > 1 else 'max', patience=2)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if net.n_classes > 1 else 'max', patience=2)
@@ -82,7 +82,6 @@ def train_net(net,
 
     for epoch in range(epochs):
         net.train()
-        # summary(net, input_size=(3, 512, 512))
         epoch_loss = 0
         with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{epochs}', unit='img') as pbar:
             for batch in train_loader:
@@ -181,12 +180,12 @@ if __name__ == '__main__':
     # net = AttU_Net()
     # net = R2U_Net()
     # net = R2AttU_Net()
-    net = NestedUNet()
+    # net = NestedUNet()
+    net = U_Net()
     # logging.info(f'Network:\n'
     #              f'\t{net.n_channels} input channels\n'
     #              f'\t{net.n_classes} output channels (classes)\n'
     #              f'\t{"Bilinear" if net.bilinear else "Transposed conv"} upscaling')
-
 
     if args.load:
         net.load_state_dict(
